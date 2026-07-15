@@ -76,6 +76,10 @@ base_padrao = """
 6. Antivírus: Leitura constante de pastas causa lentidão severa. Exigir exceções.
 7. Reinf/eSocial: Liberar porta 5984 (CouchDB) e 1433/1434 (SQL Server).
 8. Rede e VPN: Uso de Wi-Fi ou VPN causa degradação; mapear estação por IP reduz lentidão.
+9. Análise de Disco (CrystalDiskMark): Se o usuário anexar um print do CrystalDiskMark, analise os números de leitura (Read) e gravação (Write). 
+- Gargalo Sequencial: Se o valor de "SEQ1M" estiver abaixo de 80 MB/s, o disco está muito lento para carregar o sistema e transferir arquivos grandes.
+- Gargalo de Banco de Dados: Se o valor de "RND4K" estiver abaixo de 0.5 MB/s, o disco físico é o culpado pela lentidão nas rotinas do Prosoft (gravação de dados e relatórios). 
+- Solução Nível 1: Se qualquer um desses gargalos for identificado na imagem, o diagnóstico deve apontar falha/esgotamento do disco físico e o plano de ação deve recomendar um teste de saúde do HD (SMART) ou o upgrade imediato para um SSD.
 """
 
 # 2. Base Dinâmica (O arquivo TXT com as novidades da equipe)
