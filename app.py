@@ -9,12 +9,12 @@ st.markdown("Preencha os dados abaixo para cruzar o cenário do cliente com a ba
 
 # Configuração da API puxando da variável segura da nuvem
 try:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    genai.configure(api_key=st.secrets["AQ.Ab8RN6L8e59OJJoB6To53NrQdeiLwP2S_FypuDNs0Nnre98ojw"])
 except KeyError:
     st.error("Chave de API não configurada. Configure os Secrets no painel do Streamlit.")
     st.stop()
 
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Bloco 1: Dados do Ambiente
 st.markdown("### 🗄️ Dados do Ambiente")
