@@ -1,0 +1,51 @@
+1. Lentidão Generalizada (Todos os Usuários)
+
+Solução: Valide os recursos centrais. O servidor deve possuir memória mínima de 12GB e processador de 2GHz na arquitetura x64. A rede deve operar com mínimo de 10Mb/s, sendo recomendado 1Gb/s. Verifique se o banco de dados não atingiu o limite de assentos.
+
+2. Lentidão Isolada em uma Estação
+
+Solução: Foque nos requisitos da máquina local. Verifique se o computador possui 4GB de memória RAM e resolução de 1024x768. Garanta que o usuário possui privilégios de Administrador Local e que o Windows é versão PRO ou ENTERPRISE. Confirme a instalação do .NET Framework 4.8 e Java 8.
+
+3. Travamento em Rotinas de Comunicação Externa (Portal, eSocial, Reinf)
+
+
+
+Solução: Confirme se o "Prosoft Serviço de Integração" está instalado e na versão mais recente. Verifique se a internet entrega a velocidade mínima exigida de 4Mb/s para transferência de dados. Assegure a liberação das portas 80 ou 8080 no firewall.
+
+4. Degradação por Tempo de Atividade Crítico (Uptime Elevado)
+
+
+
+Solução: A recomendação imediata é agendar um reinício (reboot) do servidor fora do horário de expediente. O tempo elevado sem reiniciar o servidor causa consumo alto de memória; reiniciar os serviços e o servidor limpa o lixo acumulado.  
+
+5. Esgotamento de Memória e Paginação de Disco
+
+
+
+Solução: Verifique o consumo de memória no Gerenciador de Tarefas, garantindo que a memória atenda a exigência mínima (12GB para até 12 estações). Para ambientes TS (Terminal Service), calcule 8GB de RAM base mais cerca de 1GB adicional por usuário conectado. Reinicie o servidor para liberar a memória presa.  
+
+6. Afunilamento por Limite de Banco de Dados Pervasive
+
+Solução: Valide a versão em uso em relação à quantidade de usuários. Se houver mais de 10 usuários, não utilize o Pervasive Workgroup 11, pois ele suporta apenas de 5 a 10 usuários. Atualize para as versões Workgroup 13 ou 15 (limite de 35 assentos) ou para a versão Server (limite de 500 assentos).  
+
+7. Demora Prática em Abertura e Gravação de Cadastros
+
+
+
+Solução: Com a ajuda de um cronômetro, anote o tempo exato de abertura da rotina e inserção/gravação de dados para constatar melhoras após os ajustes. Verifique se a CPU está sobrecarregada no Gerenciador de Tarefas e certifique-se de que o servidor trabalha com um disco SSD ao invés de HD comum para obter melhor desempenho.  
+
+8. Interferência e Bloqueios de Antivírus
+
+
+
+Solução: Solicite ao técnico de TI que verifique se as devidas exceções estão configuradas corretamente. A leitura constante das pastas da Prosoft pelo antivírus causa lentidão severa, devendo ser ajustada tanto no servidor quanto nas estações.  
+
+9. Lentidão Específica na Importação e Lançamento do Reinf (ou eSocial)
+
+Solução: Foque na liberação de portas dos bancos auxiliares. É obrigatória a liberação da porta 5984 no Firewall para o banco CouchDB. Também é imprescindível liberar as portas 1433 e 1434 para comunicação com o Microsoft SQL Server.
+
+10. Lentidão Exclusiva nas Estações de Trabalho (Rede Local e Conexões)
+
+
+
+Solução: Se o servidor está rápido e a estação lenta, mapeie as estações diretamente pelo IP ao invés do nome da máquina. Verifique se o Ping está apresentando variação alta (falha na rede) e certifique-se de que as estações não estejam operando via Wi-Fi ou VPN, pois isso influencia negativamente o desempenho.
