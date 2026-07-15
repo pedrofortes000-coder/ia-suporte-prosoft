@@ -9,18 +9,18 @@ st.markdown("Preencha os dados abaixo para cruzar o cenário do cliente com a ba
 
 # Configuração da API puxando da variável segura da nuvem
 try:
-    # O .strip() remove qualquer espaço ou quebra de linha invisível que o Streamlit adicione
+    # O .strip() garante que nenhum espaço invisível quebre a chave
     chave_limpa = st.secrets["GEMINI_API_KEY"].strip()
     
-    # O transport="rest" evita o erro de token não suportado nas novas chaves AQ.
-    genai.configure(api_key=chave_limpa, transport="rest")
+    # Conexão padrão (limpa)
+    genai.configure(api_key=chave_limpa)
     
 except KeyError:
     st.error("Chave de API não configurada. Configure os Secrets no painel do Streamlit.")
     st.stop()
 
-# Usando o modelo mais atualizado e estável
-model = genai.GenerativeModel('gemini-1.5-flash')
+# Usando o sufixo -latest para garantir que o Google encontre o modelo
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 # Bloco 1: Dados do Ambiente
 st.markdown("### 🗄️ Dados do Ambiente")
