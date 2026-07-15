@@ -1,6 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
-from PIL import Image # Biblioteca necessária para ler as imagens
+from PIL import Image
+import os # Biblioteca para ler arquivos do sistema
 
 # Configuração inicial da página
 st.set_page_config(page_title="Diagnóstico IA: Prosoft", page_icon="🤖", layout="centered")
@@ -8,7 +9,7 @@ st.set_page_config(page_title="Diagnóstico IA: Prosoft", page_icon="🤖", layo
 st.title("🤖 Diagnóstico IA: Lentidão no Sistema")
 st.markdown("Preencha os dados abaixo para cruzar o cenário do cliente com a base de conhecimento.")
 
-# Configuração da API puxando da variável segura da nuvem
+# Configuração da API
 try:
     chave_limpa = st.secrets["GEMINI_API_KEY"].strip()
     genai.configure(api_key=chave_limpa)
@@ -16,7 +17,6 @@ except KeyError:
     st.error("Chave de API não configurada. Configure os Secrets no painel do Streamlit.")
     st.stop()
 
-# NOME DO MODELO CORRIGIDO (Lido diretamente do seu Raio-X)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 # Bloco 1: Dados do Ambiente
@@ -45,10 +45,9 @@ with col4:
 
 st.divider()
 
-# Bloco 3: Detalhes Adicionais e Anexos (NOVO BLOCO)
+# Bloco 3: Detalhes e Anexos
 st.markdown("### 📝 Contexto Adicional")
 detalhes = st.text_area("Observações ou mensagens de erro (Opcional)", placeholder="Digite qualquer detalhe extra relatado pelo cliente...")
-
 foto_upload = st.file_uploader("Upload de Print das Configurações do Servidor/Máquina (Opcional)", type=["png", "jpg", "jpeg"])
 
 st.divider()
@@ -64,17 +63,23 @@ with col6:
 
 st.text("")
 
-# Base de Conhecimento Embutida
-base_conhecimento = """
-1. Lentidão Generalizada: Servidor mínimo de 12GB e processador de 2GHz x64. Rede mínimo 10Mb/s (recomendado 1Gb/s).
-2. Lentidão Isolada: Estação local com 4GB de RAM, Win PRO/ENTERPRISE, .NET 4.8 e Java 8.
-3. Comunicação Externa: "Prosoft Serviço de Integração" atualizado, internet min 4Mb/s, portas 80/8080 liberadas.
-4. Esgotamento de Memória: Para TS (Terminal Service), 8GB RAM base + 1GB por usuário. Reiniciar servidor libera memória presa.
-5. Limite Pervasive: Workgroup 11 (max 10 usuários). Workgroup 13/15 (max 35 usuários). Server (max 500 usuários).
-6. Antivírus: Leitura constante de pastas causa lentidão severa. Exigir exceções.
-7. Reinf/eSocial: Liberar porta 5984 (CouchDB) e 1433/1434 (SQL Server).
-8. Rede e VPN: Uso de Wi-Fi ou VPN causa degradação; mapear estação por IP reduz lentidão.
-"""
+# --- NOVO SISTEMA DE LEITURA DA BASE DE CONHECIMENTO ---
+if os.path.exists("regras.txt"):
+    # Se existir um arquivo de texto no GitHub, a IA vai ler todas as milhares de regras de lá!
+    with open("regras.txt", "r", encoding="utf-8") as f:
+        base_conhecimento = f.read()
+else:
+    # Se o arquivo não existir ainda, ele usa a nossa base padrão de backup.
+    base_conhecimento = """
+    1. Lentidão Generalizada: Servidor mínimo de 12GB e processador de 2GHz x64. Rede mínimo 10Mb/s (recomendado 1Gb/s).
+    2. Lentidão Isolada: Estação local com 4GB de RAM, Win PRO/ENTERPRISE, .NET 4.8 e Java 8.
+    3. Comunicação Externa: "Prosoft Serviço de Integração" atualizado, internet min 4Mb/s, portas 80/8080 liberadas.
+    4. Esgotamento de Memória: Para TS (Terminal Service), 8GB RAM base + 1GB por usuário. Reiniciar servidor libera memória presa.
+    5. Limite Pervasive: Workgroup 11 (max 10 usuários). Workgroup 13/15 (max 35 usuários). Server (max 500 usuários).
+    6. Antivírus: Leitura constante de pastas causa lentidão severa. Exigir exceções.
+    7. Reinf/eSocial: Liberar porta 5984 (CouchDB) e 1433/1434 (SQL Server).
+    8. Rede e VPN: Uso de Wi-Fi ou VPN causa degradação; mapear estação por IP reduz lentidão.
+    """
 
 # Botão de Ação
 if st.button("Analisar com Inteligência Artificial", type="primary", use_container_width=True):
@@ -97,15 +102,14 @@ if st.button("Analisar com Inteligência Artificial", type="primary", use_contai
             - Reboot? {reboot_texto} | Antivírus ok? {antivirus_texto}
             - Contexto Extra: {contexto_extra}
             
-            Instrução Especial: Se houver uma imagem anexada a este prompt, ela mostra as configurações da máquina ou servidor. Analise a imagem e compare a Memória RAM e o SO mostrados com as exigências da base de conhecimento correspondentes ao escopo.
+            Instrução Especial: Se houver uma imagem anexada, cruze os dados de Hardware mostrados nela com as regras da base.
             
-            Com base EXCLUSIVAMENTE nas regras, nos dados relatados e na imagem (se fornecida), forneça:
+            Com base EXCLUSIVAMENTE nas regras, nos dados e na imagem (se fornecida), forneça:
             1. Diagnóstico do provável motivo.
             2. Plano de ação para o Nível 1.
             """
             
             try:
-                # Prepara o conteúdo para enviar (só texto, ou texto + imagem)
                 if foto_upload is not None:
                     img_aberta = Image.open(foto_upload)
                     conteudo_final = [prompt_gerado, img_aberta]
