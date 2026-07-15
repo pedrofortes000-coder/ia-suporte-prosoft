@@ -1,7 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
-import os # Biblioteca para ler arquivos do sistema
+import os 
 
 # Configuração inicial da página
 st.set_page_config(page_title="Diagnóstico IA: Prosoft", page_icon="🤖", layout="centered")
@@ -63,23 +63,29 @@ with col6:
 
 st.text("")
 
-# --- NOVO SISTEMA DE LEITURA DA BASE DE CONHECIMENTO ---
+# --- SISTEMA DE LEITURA COMBINADA (CORE + ATUALIZAÇÕES) ---
+
+# 1. Base Fixa (O Core do sistema)
+base_padrao = """
+[REGRAS FIXAS DE INFRAESTRUTURA]
+1. Lentidão Generalizada: Servidor mínimo de 12GB e processador de 2GHz x64. Rede mínimo 10Mb/s (recomendado 1Gb/s).
+2. Lentidão Isolada: Estação local com 4GB de RAM, Win PRO/ENTERPRISE, .NET 4.8 e Java 8.
+3. Comunicação Externa: "Prosoft Serviço de Integração" atualizado, internet min 4Mb/s, portas 80/8080 liberadas.
+4. Esgotamento de Memória: Para TS (Terminal Service), 8GB RAM base + 1GB por usuário. Reiniciar servidor libera memória presa.
+5. Limite Pervasive: Workgroup 11 (max 10 usuários). Workgroup 13/15 (max 35 usuários). Server (max 500 usuários).
+6. Antivírus: Leitura constante de pastas causa lentidão severa. Exigir exceções.
+7. Reinf/eSocial: Liberar porta 5984 (CouchDB) e 1433/1434 (SQL Server).
+8. Rede e VPN: Uso de Wi-Fi ou VPN causa degradação; mapear estação por IP reduz lentidão.
+"""
+
+# 2. Base Dinâmica (O arquivo TXT com as novidades da equipe)
+base_extra = ""
 if os.path.exists("regras.txt"):
-    # Se existir um arquivo de texto no GitHub, a IA vai ler todas as milhares de regras de lá!
     with open("regras.txt", "r", encoding="utf-8") as f:
-        base_conhecimento = f.read()
-else:
-    # Se o arquivo não existir ainda, ele usa a nossa base padrão de backup.
-    base_conhecimento = """
-    1. Lentidão Generalizada: Servidor mínimo de 12GB e processador de 2GHz x64. Rede mínimo 10Mb/s (recomendado 1Gb/s).
-    2. Lentidão Isolada: Estação local com 4GB de RAM, Win PRO/ENTERPRISE, .NET 4.8 e Java 8.
-    3. Comunicação Externa: "Prosoft Serviço de Integração" atualizado, internet min 4Mb/s, portas 80/8080 liberadas.
-    4. Esgotamento de Memória: Para TS (Terminal Service), 8GB RAM base + 1GB por usuário. Reiniciar servidor libera memória presa.
-    5. Limite Pervasive: Workgroup 11 (max 10 usuários). Workgroup 13/15 (max 35 usuários). Server (max 500 usuários).
-    6. Antivírus: Leitura constante de pastas causa lentidão severa. Exigir exceções.
-    7. Reinf/eSocial: Liberar porta 5984 (CouchDB) e 1433/1434 (SQL Server).
-    8. Rede e VPN: Uso de Wi-Fi ou VPN causa degradação; mapear estação por IP reduz lentidão.
-    """
+        base_extra = "\n[REGRAS DINÂMICAS DA EQUIPE]\n" + f.read()
+
+# 3. Junta tudo para a IA analisar
+base_conhecimento_completa = base_padrao + base_extra
 
 # Botão de Ação
 if st.button("Analisar com Inteligência Artificial", type="primary", use_container_width=True):
@@ -93,8 +99,8 @@ if st.button("Analisar com Inteligência Artificial", type="primary", use_contai
 
             prompt_gerado = f"""
             Você é um Especialista de Suporte Nível 3 focado no sistema Prosoft.
-            Regras de negócio:
-            {base_conhecimento}
+            Sua base de conhecimento completa (Core + Atualizações):
+            {base_conhecimento_completa}
             
             Cenário atual relatado:
             - Escopo: {escopo} | Conexão: {conexao} | Banco: {banco} | Usuários: {usuarios}
@@ -102,7 +108,7 @@ if st.button("Analisar com Inteligência Artificial", type="primary", use_contai
             - Reboot? {reboot_texto} | Antivírus ok? {antivirus_texto}
             - Contexto Extra: {contexto_extra}
             
-            Instrução Especial: Se houver uma imagem anexada, cruze os dados de Hardware mostrados nela com as regras da base.
+            Instrução Especial: Se houver uma imagem anexada, cruze os dados de Hardware mostrados nela com as regras da base. Use a regra que melhor solucione o problema principal relatado, priorizando regras dinâmicas se houver conflito.
             
             Com base EXCLUSIVAMENTE nas regras, nos dados e na imagem (se fornecida), forneça:
             1. Diagnóstico do provável motivo.
