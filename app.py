@@ -9,12 +9,8 @@ st.markdown("Preencha os dados abaixo para cruzar o cenário do cliente com a ba
 
 # Configuração da API puxando da variável segura da nuvem
 try:
-    # O .strip() garante que nenhum espaço invisível quebre a chave
     chave_limpa = st.secrets["GEMINI_API_KEY"].strip()
-    
-    # Conexão padrão (limpa)
     genai.configure(api_key=chave_limpa)
-    
 except KeyError:
     st.error("Chave de API não configurada. Configure os Secrets no painel do Streamlit.")
     st.stop()
@@ -36,14 +32,16 @@ with col2:
 
 st.divider()
 
-# Bloco 2: Sintomas
+# Bloco 2: Sintomas (ALTERADO AQUI)
 st.markdown("### ⏱️ Sintomas")
 col3, col4 = st.columns(2)
 
 with col3:
-    rotina = st.selectbox("Rotina Afetada", ["Selecione...", "Abertura inicial do Prosoft", "Inclusão e Gravação de Cadastros", "Comunicação Externa (Portal, eSocial, Reinf)", "Processamento/Relatórios"])
+    # Campo de texto livre no lugar da caixa de seleção
+    rotinas = st.text_input("Rotinas Afetadas (separe por vírgula)", placeholder="Ex: Abertura do Prosoft, Folha, eSocial")
 
 with col4:
+    # Contagem de segundos mantida conforme você pediu
     tempo_resposta = st.number_input("Tempo de Resposta (Segundos)", min_value=0.0, step=0.5, format="%.1f")
 
 st.divider()
@@ -73,8 +71,9 @@ base_conhecimento = """
 
 # Botão de Ação
 if st.button("Analisar com Inteligência Artificial", type="primary", use_container_width=True):
-    if escopo == "Selecione..." or banco == "Selecione..." or conexao == "Selecione..." or rotina == "Selecione...":
-        st.warning("⚠️ Por favor, preencha todos os campos obrigatórios.")
+    # A validação agora checa se a pessoa não deixou o campo de rotinas em branco
+    if escopo == "Selecione..." or banco == "Selecione..." or conexao == "Selecione..." or rotinas.strip() == "":
+        st.warning("⚠️ Por favor, preencha todos os campos obrigatórios (incluindo as rotinas).")
     else:
         with st.spinner("Analisando padrões..."):
             reboot_texto = "Sim" if uptime_reboot else "Não"
@@ -87,7 +86,7 @@ if st.button("Analisar com Inteligência Artificial", type="primary", use_contai
             
             Cenário atual relatado:
             - Escopo: {escopo} | Conexão: {conexao} | Banco: {banco} | Usuários: {usuarios}
-            - Rotina: {rotina} | Tempo: {tempo_resposta}s
+            - Rotinas: {rotinas} | Tempo: {tempo_resposta}s
             - Reboot? {reboot_texto} | Antivírus ok? {antivirus_texto}
             
             Com base EXCLUSIVAMENTE nas regras, forneça:
