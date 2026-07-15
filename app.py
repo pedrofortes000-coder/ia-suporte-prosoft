@@ -3,42 +3,27 @@ import google.generativeai as genai
 from PIL import Image
 import os 
 
-# Configuração inicial da página
+# Configuração inicial da página (Layout wide para aproveitar melhor a tela com as abas)
 st.set_page_config(page_title="Portal IA: Prosoft", page_icon="🤖", layout="wide")
-
-# --- BARRA LATERAL (CONFIGURAÇÃO DE CHAVE) ---
-with st.sidebar:
-    st.header("⚙️ Configuração do Sistema")
-    st.markdown("Para utilizar o portal, insira uma Chave de API válida do Google Gemini.")
-    
-    # Campo como "password" para esconder os caracteres por segurança
-    chave_inserida = st.text_input("Chave de API", type="password", placeholder="AIzaSy...")
-    
-    st.markdown("---")
-    st.markdown("**Como obter a chave?**\n1. Acesse o [Google AI Studio](https://aistudio.google.com/app/apikey).\n2. Faça login com o e-mail da empresa ou pessoal.\n3. Clique em *Create API key* e cole acima.")
-
-# Trava de segurança: O app só funciona se a chave for preenchida
-if not chave_inserida:
-    st.title("🤖 Portal IA: Diagnóstico e Relacionamento")
-    st.warning("👈 Por favor, insira a sua Chave de API na barra lateral para habilitar o sistema.")
-    st.stop() # Para a execução do código aqui até a chave ser colocada
-
-# Configuração da API com a chave do usuário
-try:
-    genai.configure(api_key=chave_inserida.strip())
-    model = genai.GenerativeModel('gemini-2.5-flash')
-except Exception as e:
-    st.error(f"Erro ao configurar a API: {e}")
-    st.stop()
 
 st.title("🤖 Portal IA: Diagnóstico e Relacionamento")
 st.markdown("Selecione o módulo de atendimento abaixo:")
+
+# Configuração da API
+try:
+    chave_limpa = st.secrets["GEMINI_API_KEY"].strip()
+    genai.configure(api_key=chave_limpa)
+except KeyError:
+    st.error("Chave de API não configurada. Configure os Secrets no painel do Streamlit.")
+    st.stop()
+
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 # --- CRIAÇÃO DAS ABAS ---
 aba_suporte, aba_relacionamento = st.tabs(["🛠️ Suporte Técnico (Nível 1)", "🤝 Relacionamento (Transcrição)"])
 
 # ==========================================
-# ABA 1: SUPORTE TÉCNICO
+# ABA 1: SUPORTE TÉCNICO (O QUE JÁ FIZEMOS)
 # ==========================================
 with aba_suporte:
     st.markdown("### 🗄️ Dados do Ambiente")
@@ -145,8 +130,9 @@ with aba_suporte:
                 except Exception as e:
                     st.error(f"Erro: {e}")
 
+
 # ==========================================
-# ABA 2: RELACIONAMENTO
+# ABA 2: RELACIONAMENTO (NOVO MÓDULO)
 # ==========================================
 with aba_relacionamento:
     st.markdown("### 🗣️ Análise de Transcrição de Reunião (Meet)")
@@ -189,6 +175,50 @@ with aba_relacionamento:
                     resposta_relacionamento = model.generate_content(prompt_relacionamento)
                     st.success("Dossiê gerado com sucesso!")
                     st.markdown("### 📋 Dossiê de Escalonamento (N2)")
+# ==========================================
+# ABA 3: PERFORMANCE DE NOTAS (NOVO MÓDULO)
+# ==========================================
+with aba_performance:
+    st.markdown("### 📊 Calculadora de Eficiência de Importação")
+    
+    col_a, col_b = st.columns(2)
+    with col_a:
+        qtd_notas = st.number_input("Quantidade de Notas Importadas", min_value=1, step=1)
+    with col_b:
+        tempo_total = st.number_input("Tempo Total de Processamento (Segundos)", min_value=0.1, step=0.5, format="%.1f")
+    
+    # Cálculos
+    notas_por_segundo = qtd_notas / tempo_total
+    tempo_medio_nota = tempo_total / qtd_notas
+    
+    # Exibição visual dos KPIs
+    col_kpi1, col_kpi2 = st.columns(2)
+    col_kpi1.metric("Notas por Segundo", f"{notas_por_segundo:.2f} n/s")
+    col_kpi2.metric("Tempo Médio por Nota", f"{tempo_medio_nota:.2f} s")
+    
+    st.divider()
+    
+    if st.button("Analisar Eficiência de Processamento", type="primary", use_container_width=True):
+        with st.spinner("Analisando eficiência..."):
+            prompt_perf = f"""
+            Você é um especialista em performance de banco de dados Prosoft.
+            O usuário processou {qtd_notas} notas fiscais em {tempo_total} segundos.
+            O resultado foi de {notas_por_segundo:.2f} notas/segundo.
+            
+            Analise: Essa performance é considerada saudável ou indica gargalo?
+            Lembre-se: Processamentos abaixo de 1 nota/segundo geralmente indicam gargalo de rede ou disco (Pervasive).
+            
+            Forneça:
+            1. Diagnóstico de performance.
+            2. Lista de verificação para otimizar a velocidade (ex: fragmentação de disco, tamanho da memória, ou necessidade de migração para SQL Server).
+            """
+            
+            try:
+                resposta = model.generate_content(prompt_perf)
+                st.markdown("### 🤖 Diagnóstico de Performance")
+                st.info(resposta.text)
+            except Exception as e:
+                st.error(f"Erro: {e}")
                     st.info(resposta_relacionamento.text)
                 except Exception as e:
                     st.error(f"Erro ao conectar com a IA: {e}")
