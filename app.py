@@ -28,7 +28,7 @@ with col1:
     banco = st.selectbox("Versão do Banco de Dados", ["Selecione...", "Pervasive Workgroup v11", "Pervasive Workgroup v13 / v15", "Pervasive Server", "Microsoft SQL Server"])
 
 with col2:
-    conexao = st.selectbox("Tipo de Conexão", ["Selecione...", "Rede Local", "Terminal Service (TS)", "Wi-Fi", "VPN"])
+    conexao = st.multiselect("Tipo de Conexão (Pode escolher várias)", ["Rede Local", "Terminal Service (TS)", "Wi-Fi", "VPN"])
     usuarios = st.number_input("Quantidade de Usuários Afetados", min_value=1, step=1)
 
 st.divider()
@@ -38,7 +38,8 @@ st.markdown("### ⏱️ Sintomas")
 col3, col4 = st.columns(2)
 
 with col3:
-    rotinas = st.text_input("Rotinas Afetadas (separe por vírgula)", placeholder="Ex: Abertura do Prosoft, Folha, eSocial")
+    rotinas_comuns = st.multiselect("Rotinas Afetadas (Selecione uma ou mais)", ["Abertura inicial do Prosoft", "Inclusão e Gravação de Cadastros", "Folha de Pagamento", "Comunicação Externa (Portal, eSocial, Reinf)", "Processamento/Relatórios"])
+    rotinas_extras = st.text_input("Outras Rotinas (Se não estiver na lista, digite separando por vírgula)")
 
 with col4:
     tempo_resposta = st.number_input("Tempo de Resposta (Segundos)", min_value=0.0, step=0.5, format="%.1f")
@@ -48,7 +49,8 @@ st.divider()
 # Bloco 3: Detalhes e Anexos
 st.markdown("### 📝 Contexto Adicional")
 detalhes = st.text_area("Observações ou mensagens de erro (Opcional)", placeholder="Digite qualquer detalhe extra relatado pelo cliente...")
-foto_upload = st.file_uploader("Upload de Print das Configurações do Servidor/Máquina (Opcional)", type=["png", "jpg", "jpeg"])
+
+fotos_upload = st.file_uploader("Upload de Prints das Configurações ou Erros (Pode selecionar vários arquivos)", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
 
 st.divider()
 
@@ -65,7 +67,6 @@ st.text("")
 
 # --- SISTEMA DE LEITURA COMBINADA (CORE + ATUALIZAÇÕES) ---
 
-# 1. Base Fixa (O Core do sistema)
 base_padrao = """
 [REGRAS FIXAS DE INFRAESTRUTURA]
 1. Lentidão Generalizada: Servidor mínimo de 12GB e processador de 2GHz x64. Rede mínimo 10Mb/s (recomendado 1Gb/s).
@@ -76,30 +77,29 @@ base_padrao = """
 6. Antivírus: Leitura constante de pastas causa lentidão severa. Exigir exceções.
 7. Reinf/eSocial: Liberar porta 5984 (CouchDB) e 1433/1434 (SQL Server).
 8. Rede e VPN: Uso de Wi-Fi ou VPN causa degradação; mapear estação por IP reduz lentidão.
-9. Análise de Disco (CrystalDiskMark): Se o usuário anexar um print do CrystalDiskMark, analise os números de leitura (Read) e gravação (Write). 
-- Gargalo Sequencial: Se o valor de "SEQ1M" estiver abaixo de 80 MB/s, o disco está muito lento para carregar o sistema e transferir arquivos grandes.
-- Gargalo de Banco de Dados: Se o valor de "RND4K" estiver abaixo de 0.5 MB/s, o disco físico é o culpado pela lentidão nas rotinas do Prosoft (gravação de dados e relatórios). 
-- Solução Nível 1: Se qualquer um desses gargalos for identificado na imagem, o diagnóstico deve apontar falha/esgotamento do disco físico e o plano de ação deve recomendar um teste de saúde do HD (SMART) ou o upgrade imediato para um SSD.
 """
 
-# 2. Base Dinâmica (O arquivo TXT com as novidades da equipe)
 base_extra = ""
 if os.path.exists("regras.txt"):
     with open("regras.txt", "r", encoding="utf-8") as f:
         base_extra = "\n[REGRAS DINÂMICAS DA EQUIPE]\n" + f.read()
 
-# 3. Junta tudo para a IA analisar
 base_conhecimento_completa = base_padrao + base_extra
 
 # Botão de Ação
 if st.button("Analisar com Inteligência Artificial", type="primary", use_container_width=True):
-    if escopo == "Selecione..." or banco == "Selecione..." or conexao == "Selecione..." or rotinas.strip() == "":
-        st.warning("⚠️ Por favor, preencha todos os campos obrigatórios em 'Dados do Ambiente' e 'Sintomas'.")
+    if escopo == "Selecione..." or banco == "Selecione..." or len(conexao) == 0 or (len(rotinas_comuns) == 0 and rotinas_extras.strip() == ""):
+        st.warning("⚠️ Por favor, preencha todos os campos obrigatórios (selecione pelo menos uma Conexão e uma Rotina).")
     else:
-        with st.spinner("Analisando padrões e anexos..."):
+        with st.spinner("Analisando padrões e avaliando múltiplas evidências..."):
             reboot_texto = "Sim" if uptime_reboot else "Não"
             antivirus_texto = "Sim" if antivirus_ok else "Não"
             contexto_extra = detalhes if detalhes.strip() != "" else "Nenhum detalhe adicional informado."
+            
+            conexao_texto = ", ".join(conexao)
+            rotinas_texto = ", ".join(rotinas_comuns)
+            if rotinas_extras.strip() != "":
+                rotinas_texto += f", {rotinas_extras}"
 
             prompt_gerado = f"""
             Você é um Especialista de Suporte Nível 3 focado no sistema Prosoft.
@@ -107,24 +107,25 @@ if st.button("Analisar com Inteligência Artificial", type="primary", use_contai
             {base_conhecimento_completa}
             
             Cenário atual relatado:
-            - Escopo: {escopo} | Conexão: {conexao} | Banco: {banco} | Usuários: {usuarios}
-            - Rotinas: {rotinas} | Tempo: {tempo_resposta}s
+            - Escopo: {escopo} | Conexões Envolvidas: {conexao_texto} | Banco: {banco} | Usuários: {usuarios}
+            - Rotinas Afetadas: {rotinas_texto} | Tempo: {tempo_resposta}s
             - Reboot? {reboot_texto} | Antivírus ok? {antivirus_texto}
             - Contexto Extra: {contexto_extra}
             
-            Instrução Especial: Se houver uma imagem anexada, cruze os dados de Hardware mostrados nela com as regras da base. Use a regra que melhor solucione o problema principal relatado, priorizando regras dinâmicas se houver conflito.
+            Instrução Especial: Se houverem imagens anexadas, analise TODAS como um conjunto de evidências para o diagnóstico. Priorize as regras dinâmicas em caso de conflito. 
+            REGRAS DE ESTILO: Escreva a resposta de forma natural e direta. É ESTRITAMENTE PROIBIDO citar os números ou os nomes das regras no texto (ex: NUNCA escreva "conforme a Regra 8" ou "(Regra Fixa 5)"). Apenas aplique o conhecimento na sua explicação.
             
-            Com base EXCLUSIVAMENTE nas regras, nos dados e na imagem (se fornecida), forneça:
+            Com base EXCLUSIVAMENTE nas regras, nos dados e nas imagens (se fornecidas), forneça:
             1. Diagnóstico do provável motivo.
             2. Plano de ação para o Nível 1.
             """
             
             try:
-                if foto_upload is not None:
-                    img_aberta = Image.open(foto_upload)
-                    conteudo_final = [prompt_gerado, img_aberta]
-                else:
-                    conteudo_final = prompt_gerado
+                conteudo_final = [prompt_gerado]
+                if fotos_upload:
+                    for foto in fotos_upload:
+                        img_aberta = Image.open(foto)
+                        conteudo_final.append(img_aberta)
 
                 resposta = model.generate_content(conteudo_final)
                 st.success("Diagnóstico concluído com sucesso!")
