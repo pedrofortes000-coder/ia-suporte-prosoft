@@ -9,8 +9,12 @@ st.markdown("Preencha os dados abaixo para cruzar o cenário do cliente com a ba
 
 # Configuração da API puxando da variável segura da nuvem
 try:
-    # Aqui o código busca a etiqueta "GEMINI_API_KEY" que você salvou no painel
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    # O .strip() remove qualquer espaço ou quebra de linha invisível que o Streamlit adicione
+    chave_limpa = st.secrets["GEMINI_API_KEY"].strip()
+    
+    # O transport="rest" evita o erro de token não suportado nas novas chaves AQ.
+    genai.configure(api_key=chave_limpa, transport="rest")
+    
 except KeyError:
     st.error("Chave de API não configurada. Configure os Secrets no painel do Streamlit.")
     st.stop()
