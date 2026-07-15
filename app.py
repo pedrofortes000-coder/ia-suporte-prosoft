@@ -14,7 +14,7 @@ except KeyError:
     st.error("Chave de API não configurada. Configure os Secrets no painel do Streamlit.")
     st.stop()
 
-model = genai.GenerativeModel('gemini-1.5-flash-latest')
+model = genai.GenerativeModel('gemini-pro')
 
 # Bloco 1: Dados do Ambiente
 st.markdown("### 🗄️ Dados do Ambiente")
