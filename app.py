@@ -1,5 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
+from PIL import Image # Biblioteca necessária para ler as imagens
 
 # Configuração inicial da página
 st.set_page_config(page_title="Diagnóstico IA: Prosoft", page_icon="🤖", layout="centered")
@@ -32,21 +33,27 @@ with col2:
 
 st.divider()
 
-# Bloco 2: Sintomas (ALTERADO AQUI)
+# Bloco 2: Sintomas
 st.markdown("### ⏱️ Sintomas")
 col3, col4 = st.columns(2)
 
 with col3:
-    # Campo de texto livre no lugar da caixa de seleção
     rotinas = st.text_input("Rotinas Afetadas (separe por vírgula)", placeholder="Ex: Abertura do Prosoft, Folha, eSocial")
 
 with col4:
-    # Contagem de segundos mantida conforme você pediu
     tempo_resposta = st.number_input("Tempo de Resposta (Segundos)", min_value=0.0, step=0.5, format="%.1f")
 
 st.divider()
 
-# Bloco 3: Triagem Rápida
+# Bloco 3: Detalhes Adicionais e Anexos (NOVO BLOCO)
+st.markdown("### 📝 Contexto Adicional")
+detalhes = st.text_area("Observações ou mensagens de erro (Opcional)", placeholder="Digite qualquer detalhe extra relatado pelo cliente...")
+
+foto_upload = st.file_uploader("Upload de Print das Configurações do Servidor/Máquina (Opcional)", type=["png", "jpg", "jpeg"])
+
+st.divider()
+
+# Bloco 4: Triagem Rápida
 st.markdown("### 🩺 Triagem Rápida")
 col5, col6 = st.columns(2)
 
@@ -57,7 +64,7 @@ with col6:
 
 st.text("")
 
-# Base de Conhecimento Embutida (Sem precisar de txt)
+# Base de Conhecimento Embutida
 base_conhecimento = """
 1. Lentidão Generalizada: Servidor mínimo de 12GB e processador de 2GHz x64. Rede mínimo 10Mb/s (recomendado 1Gb/s).
 2. Lentidão Isolada: Estação local com 4GB de RAM, Win PRO/ENTERPRISE, .NET 4.8 e Java 8.
@@ -71,13 +78,13 @@ base_conhecimento = """
 
 # Botão de Ação
 if st.button("Analisar com Inteligência Artificial", type="primary", use_container_width=True):
-    # A validação agora checa se a pessoa não deixou o campo de rotinas em branco
     if escopo == "Selecione..." or banco == "Selecione..." or conexao == "Selecione..." or rotinas.strip() == "":
-        st.warning("⚠️ Por favor, preencha todos os campos obrigatórios (incluindo as rotinas).")
+        st.warning("⚠️ Por favor, preencha todos os campos obrigatórios em 'Dados do Ambiente' e 'Sintomas'.")
     else:
-        with st.spinner("Analisando padrões..."):
+        with st.spinner("Analisando padrões e anexos..."):
             reboot_texto = "Sim" if uptime_reboot else "Não"
             antivirus_texto = "Sim" if antivirus_ok else "Não"
+            contexto_extra = detalhes if detalhes.strip() != "" else "Nenhum detalhe adicional informado."
 
             prompt_gerado = f"""
             Você é um Especialista de Suporte Nível 3 focado no sistema Prosoft.
@@ -88,14 +95,24 @@ if st.button("Analisar com Inteligência Artificial", type="primary", use_contai
             - Escopo: {escopo} | Conexão: {conexao} | Banco: {banco} | Usuários: {usuarios}
             - Rotinas: {rotinas} | Tempo: {tempo_resposta}s
             - Reboot? {reboot_texto} | Antivírus ok? {antivirus_texto}
+            - Contexto Extra: {contexto_extra}
             
-            Com base EXCLUSIVAMENTE nas regras, forneça:
+            Instrução Especial: Se houver uma imagem anexada a este prompt, ela mostra as configurações da máquina ou servidor. Analise a imagem e compare a Memória RAM e o SO mostrados com as exigências da base de conhecimento correspondentes ao escopo.
+            
+            Com base EXCLUSIVAMENTE nas regras, nos dados relatados e na imagem (se fornecida), forneça:
             1. Diagnóstico do provável motivo.
             2. Plano de ação para o Nível 1.
             """
             
             try:
-                resposta = model.generate_content(prompt_gerado)
+                # Prepara o conteúdo para enviar (só texto, ou texto + imagem)
+                if foto_upload is not None:
+                    img_aberta = Image.open(foto_upload)
+                    conteudo_final = [prompt_gerado, img_aberta]
+                else:
+                    conteudo_final = prompt_gerado
+
+                resposta = model.generate_content(conteudo_final)
                 st.success("Diagnóstico concluído com sucesso!")
                 st.markdown("### 🤖 Parecer do Especialista (IA)")
                 st.info(resposta.text)
