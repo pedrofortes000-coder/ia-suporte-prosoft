@@ -202,35 +202,46 @@ with aba_auditoria:
 # ==========================================
 with aba_finalizacao:
     st.markdown("### ✅ Finalização Profissional de Chamado (Nível 2)")
-    st.markdown("Preencha os campos abaixo para gerar um parecer técnico de encerramento padronizado.")
+    st.markdown("Preencha os campos abaixo para gerar um parecer técnico interno de encerramento padronizado para o CRM.")
     
     col_a, col_b = st.columns(2)
     with col_a:
-        nome_cliente = st.text_input("Nome do Cliente:")
+        nome_cliente = st.text_input("Nome do Cliente / Contato:")
         telefone_contato = st.text_input("Telefone de Contato:")
     
-    resolucao = st.text_area("Descrição Técnica da Resolução:", height=200, placeholder="Descreva o que foi feito para sanar a falha...")
+    resolucao = st.text_area("Descrição Técnica da Resolução:", height=200, placeholder="Descreva tecnicamente o que foi executado...")
     
-    if st.button("Gerar Parecer de Encerramento", type="primary", use_container_width=True):
+    if st.button("Gerar Parecer Técnico Interno", type="primary", use_container_width=True):
         if not nome_cliente or not resolucao:
             st.warning("⚠️ Preencha Nome do Cliente e Resolução.")
         else:
-            with st.spinner("Estruturando parecer..."):
+            with st.spinner("Estruturando parecer técnico..."):
                 prompt_finalizacao = f"""
-                Você é um Analista de Suporte Sênior. Crie um parecer de finalização de chamado formal e técnico para o sistema Prosoft.
-                Dados:
-                - Cliente: {nome_cliente}
-                - Telefone: {telefone_contato}
-                - Resolução Técnica: {resolucao}
+                Você é um Analista de Suporte Sênior. Sua tarefa é criar um PARECER TÉCNICO INTERNO de encerramento para ser salvo no sistema de chamados (CRM/Jira) da Prosoft.
                 
-                Estruture em:
-                1. Saudação ao cliente.
-                2. Descrição técnica da solução (limpa e profissional).
-                3. Informação sobre encerramento do ticket.
-                4. Colocação à disposição para suporte adicional.
+                REGRAS RÍGIDAS DE FORMATAÇÃO:
+                - NÃO escreva como um e-mail para o cliente. Não use "Prezado", "Atenciosamente" ou saudações.
+                - Escreva um log de registro interno, na terceira pessoa, objetivo e estritamente formal.
+                - É um registro para outros técnicos lerem, então mantenha o foco no que foi resolvido.
+                
+                Dados da tratativa:
+                - Contato: {nome_cliente}
+                - Telefone: {telefone_contato}
+                - Procedimento Técnico Realizado: {resolucao}
+                
+                Estruture o parecer EXATAMENTE com os seguintes tópicos:
+                
+                **1. Registro de Contato:**
+                (Confirme o contato com o cliente no número informado de forma objetiva).
+                
+                **2. Procedimento Técnico Executado:**
+                (Traduza a ação realizada para uma linguagem técnica, clara e detalhada do que foi alterado/corrigido no ambiente do cliente).
+                
+                **3. Status de Encerramento:**
+                (Confirme que os testes foram validados e que o ticket está sendo finalizado com sucesso).
                 """
                 
                 resposta = model.generate_content(prompt_finalizacao)
-                st.success("✅ Parecer gerado com sucesso!")
+                st.success("✅ Parecer interno gerado com sucesso!")
                 st.code(resposta.text, language="markdown")
-                st.download_button("💾 Baixar Parecer Final (TXT)", resposta.text, "parecer_final.txt", use_container_width=True)
+                st.download_button("💾 Baixar Parecer Técnico (TXT)", resposta.text, "parecer_interno_n2.txt", use_container_width=True)
