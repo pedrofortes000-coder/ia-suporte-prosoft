@@ -97,27 +97,39 @@ with aba_suporte:
 # ==========================================
 with aba_relacionamento:
     st.markdown("### 🗣️ Análise de Transcrição (Meet)")
-    texto_transcricao = st.text_area("Cole a transcrição aqui:", height=300)
+    texto_transcricao = st.text_area("Cole a transcrição aqui (opcional se enviar prints):", height=300)
+    fotos_relacionamento = st.file_uploader("Upload de prints da reunião (Chat/Comentários/Tela):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_relac")
     
     if st.button("Gerar Dossiê para Nível 2", type="primary", use_container_width=True):
-        if texto_transcricao:
-            with st.spinner("Extraindo dores do cliente..."):
+        if texto_transcricao or fotos_relacionamento:
+            with st.spinner("Analisando transcrição e lendo imagens do chat..."):
                 prompt_relac = f"""
-                Analise esta transcrição de reunião e crie um dossiê técnico para o Nível 2.
+                Você é um analista técnico escrivão. Analise a transcrição e/ou as imagens anexadas e crie um dossiê técnico para o Nível 2.
+
+                NOVA INSTRUÇÃO DE LEITURA DE IMAGENS (OCR CONTEXTUAL):
+                Se imagens foram enviadas (como prints de chat da reunião ou telas do sistema), você DEVE extrair as frases, comentários e erros presentes nelas.
+                Cruze os comentários extraídos das imagens com o texto da transcrição. Insira as frases lidas das imagens no exato contexto onde elas se encaixam no dossiê.
 
                 REGRAS DE FORMATAÇÃO ESTRITAS E INEGOCIÁVEIS:
-                1. Retorne APENAS o resumo técnico, o ambiente relatado, o problema central e a ação que foi tomada.
-                2. É ESTRITAMENTE PROIBIDO gerar seções de "Feedback", "Para Pedro Augusto Fortes", "Para o Gestor", "Pontos Fortes", "Oportunidades de Melhoria".
-                3. É ESTRITAMENTE PROIBIDO avaliar o comportamento, comunicação ou proatividade das pessoas citadas no texto.
-                4. Mantenha o tom 100% frio, técnico e focado apenas no software/infraestrutura.
+                1. Retorne APENAS o resumo técnico, o ambiente relatado, o problema central, as falas extraídas do chat/imagens e a ação tomada.
+                2. É ESTRITAMENTE PROIBIDO gerar seções de "Feedback", "Pontos Fortes", "Oportunidades de Melhoria".
+                3. É ESTRITAMENTE PROIBIDO avaliar o comportamento ou proatividade das pessoas.
+                4. Mantenha o tom frio, técnico e focado apenas na documentação do chamado.
 
                 Transcrição:
                 {texto_transcricao}
                 """
-                resposta = model.generate_content(prompt_relac)
-                st.success("✅ Dossiê gerado!")
+                
+                conteudo_relac = [prompt_relac]
+                if fotos_relacionamento:
+                    for f in fotos_relacionamento: conteudo_relac.append(Image.open(f))
+                
+                resposta = model.generate_content(conteudo_relac)
+                st.success("✅ Dossiê gerado com extração de imagens!")
                 st.code(resposta.text, language="markdown")
                 st.download_button("💾 Baixar Dossiê (TXT)", resposta.text, "dossie_n2.txt", use_container_width=True)
+        else:
+            st.warning("⚠️ Insira a transcrição em texto ou anexe pelo menos uma imagem do chat para gerar o dossiê.")
 
 # ==========================================
 # ABA 3: PERFORMANCE
