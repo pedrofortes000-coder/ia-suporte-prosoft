@@ -16,6 +16,16 @@ except Exception as e:
 
 st.title("🤖 Portal IA: Diagnóstico, Relacionamento, Auditoria e Fechamento")
 
+# --- CORREÇÃO VISUAL: QUEBRA DE LINHA NO BLOCO DE CÓDIGO ---
+st.markdown("""
+<style>
+div[data-testid="stCodeBlock"] code {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # --- CRIAÇÃO DAS 6 ABAS ---
 aba_suporte, aba_relacionamento, aba_performance, aba_retorno_n2, aba_auditoria, aba_finalizacao = st.tabs([
     "🛠️ Suporte (N1)", 
