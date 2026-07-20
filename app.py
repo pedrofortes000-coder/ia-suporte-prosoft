@@ -16,12 +16,16 @@ except Exception as e:
 
 st.title("🤖 Portal IA: Diagnóstico, Relacionamento, Auditoria e Fechamento")
 
-# --- CORREÇÃO VISUAL: QUEBRA DE LINHA NO BLOCO DE CÓDIGO ---
+# --- CORREÇÃO VISUAL AGRESSIVA: QUEBRA DE LINHA NO BLOCO DE CÓDIGO ---
 st.markdown("""
 <style>
-div[data-testid="stCodeBlock"] code {
+/* Força a quebra de linha em qualquer bloco de código ou texto pré-formatado */
+div[data-testid="stCodeBlock"] pre, 
+div[data-testid="stCodeBlock"] code,
+pre, code {
     white-space: pre-wrap !important;
     word-break: break-word !important;
+    overflow-wrap: break-word !important;
 }
 </style>
 """, unsafe_allow_html=True)
