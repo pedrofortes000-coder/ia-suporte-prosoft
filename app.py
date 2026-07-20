@@ -72,7 +72,15 @@ with aba_suporte:
                 with open("regras.txt", "r", encoding="utf-8") as f:
                     base_extra = "\n[REGRAS DINÂMICAS]\n" + f.read()
             
-            prompt = f"Você é especialista Prosoft. Base: {base_padrao + base_extra}. Analise o cenário: {escopo}, {conexao}, {banco}. Sintomas: {rotinas_comuns} {rotinas_extras}."
+            prompt = f"""
+            Você é especialista Prosoft. Base: {base_padrao + base_extra}. 
+            Analise o cenário: {escopo}, {conexao}, {banco}. Sintomas: {rotinas_comuns} {rotinas_extras}.
+            
+            REGRAS RÍGIDAS DE RETORNO:
+            1. Entregue APENAS o diagnóstico técnico.
+            2. É ESTRITAMENTE PROIBIDO avaliar o comportamento das pessoas, gerar "feedbacks", "pontos fortes" ou qualquer tipo de avaliação de desempenho pessoal ou profissional.
+            3. Mantenha a resposta impessoal e direta ao ponto.
+            """
             conteudo = [prompt]
             if fotos_upload:
                 for f in fotos_upload: conteudo.append(Image.open(f))
@@ -94,7 +102,18 @@ with aba_relacionamento:
     if st.button("Gerar Dossiê para Nível 2", type="primary", use_container_width=True):
         if texto_transcricao:
             with st.spinner("Extraindo dores do cliente..."):
-                prompt_relac = f"Analise esta transcrição de reunião e crie um dossiê técnico para o Nível 2: {texto_transcricao}"
+                prompt_relac = f"""
+                Analise esta transcrição de reunião e crie um dossiê técnico para o Nível 2.
+
+                REGRAS DE FORMATAÇÃO ESTRITAS E INEGOCIÁVEIS:
+                1. Retorne APENAS o resumo técnico, o ambiente relatado, o problema central e a ação que foi tomada.
+                2. É ESTRITAMENTE PROIBIDO gerar seções de "Feedback", "Para Pedro Augusto Fortes", "Para o Gestor", "Pontos Fortes", "Oportunidades de Melhoria".
+                3. É ESTRITAMENTE PROIBIDO avaliar o comportamento, comunicação ou proatividade das pessoas citadas no texto.
+                4. Mantenha o tom 100% frio, técnico e focado apenas no software/infraestrutura.
+
+                Transcrição:
+                {texto_transcricao}
+                """
                 resposta = model.generate_content(prompt_relac)
                 st.success("✅ Dossiê gerado!")
                 st.code(resposta.text, language="markdown")
@@ -111,7 +130,11 @@ with aba_performance:
     
     if st.button("Analisar Eficiência", type="primary"):
         with st.spinner("Analisando eficiência..."):
-            prompt_perf = f"Analise a performance: {qtd} notas em {tempo} segundos. Lembre-se: abaixo de 1 nota/s indica gargalo."
+            prompt_perf = f"""
+            Analise a performance: {qtd} notas em {tempo} segundos. Lembre-se: abaixo de 1 nota/s indica gargalo.
+            
+            REGRA: Responda APENAS com a análise matemática e técnica de banco de dados. Sem saudações e sem feedback comportamental.
+            """
             resposta = model.generate_content(prompt_perf)
             st.success("✅ Diagnóstico de performance gerado!")
             st.code(resposta.text, language="markdown")
@@ -132,7 +155,12 @@ with aba_retorno_n2:
     
     if st.button("Gerar Relatório de Retorno", type="primary", use_container_width=True):
         with st.spinner("Consolidando..."):
-            prompt_fechamento = f"Crie um relatório de encerramento profissional com: {descricao_tecnica_retorno} e feedback: {transcricao_feedback}"
+            prompt_fechamento = f"""
+            Crie um relatório de encerramento profissional com: {descricao_tecnica_retorno} e feedback: {transcricao_feedback}
+            
+            REGRAS RÍGIDAS: 
+            É ESTRITAMENTE PROIBIDO avaliar o comportamento, gerar seções de feedback pessoal ou dar notas para a atuação do analista ou do cliente. Mantenha o tom estritamente documental.
+            """
             conteudo_final = [prompt_fechamento]
             if fotos_retorno:
                 for f in fotos_retorno: conteudo_final.append(Image.open(f))
@@ -161,6 +189,7 @@ with aba_auditoria:
                 --- REGRAS DE BOM SENSO ---
                 1. Análise de Finalização: Se o chamado foi encerrado pelo analista e consta no parecer que a solução foi aplicada, ou que o cliente ficou responsável por monitorar/reiniciar, o analista NÃO deve ser penalizado por "Contato" ou "Contato p/ finalizar". O atendimento é considerado "Finalizado Corretamente".
                 2. O que não está no parecer não conta: A avaliação é feita EXCLUSIVAMENTE pelo que está registrado no texto e nas imagens anexadas.
+                3. É ESTRITAMENTE PROIBIDO gerar seções de "Feedback pessoal", "Pontos Fortes", "Melhorias de comunicação" ou avaliar a postura de qualquer pessoa. Atenha-se puramente aos critérios abaixo.
                 
                 --- CRITÉRIOS DE AUDITORIA ---
                 1. Contato (Grave): Ignorar se o chamado foi finalizado corretamente.
@@ -222,7 +251,7 @@ with aba_finalizacao:
                 REGRAS RÍGIDAS DE FORMATAÇÃO:
                 - NÃO escreva como um e-mail para o cliente. Não use "Prezado", "Atenciosamente" ou saudações.
                 - Escreva um log de registro interno, na terceira pessoa, objetivo e estritamente formal.
-                - É um registro para outros técnicos lerem, então mantenha o foco no que foi resolvido.
+                - É ESTRITAMENTE PROIBIDO incluir avaliações de desempenho, feedbacks comportamentais ou ditar o que o técnico ou o cliente fizeram de certo/errado.
                 
                 Dados da tratativa:
                 - Contato: {nome_cliente}
