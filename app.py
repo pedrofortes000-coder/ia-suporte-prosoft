@@ -14,7 +14,7 @@ except Exception as e:
     st.error("Erro ao configurar a API. Verifique o seu st.secrets no painel do Streamlit.")
     st.stop()
 
-st.title("🤖 Portal IA: Diagnóstico, Relacionamento, Auditoria e Fechamento")
+st.title("🤖 Portal IA: Diagnóstico, QA, Retornos e Cloud")
 
 # --- CORREÇÃO VISUAL AGRESSIVA: QUEBRA DE LINHA NO BLOCO DE CÓDIGO ---
 st.markdown("""
@@ -30,14 +30,15 @@ pre, code {
 </style>
 """, unsafe_allow_html=True)
 
-# --- CRIAÇÃO DAS 6 ABAS ---
-aba_suporte, aba_relacionamento, aba_performance, aba_retorno_n2, aba_auditoria, aba_finalizacao = st.tabs([
+# --- CRIAÇÃO DAS 7 ABAS ---
+aba_suporte, aba_relacionamento, aba_performance, aba_retorno_n2, aba_auditoria, aba_finalizacao, aba_migracao = st.tabs([
     "🛠️ Suporte (N1)", 
     "🤝 Relacionamento (N2)", 
     "📊 Performance", 
     "🔄 Retorno N2",
     "⚖️ Auditoria",
-    "✅ Finalização N2"
+    "✅ Finalização N2",
+    "☁️ Migração Cloud"
 ])
 
 # --- BASE DE CONHECIMENTO (CORE) ---
@@ -151,7 +152,7 @@ with aba_relacionamento:
 with aba_performance:
     st.markdown("### 📊 Calculadora de Performance")
     c1, c2 = st.columns(2)
-    qtd = c1.number_input("Quantidade de Notas", min_value=1)
+    qtd = c1.number_input("Quantidade de Notas/Registros", min_value=1)
     tempo = c2.number_input("Tempo Total (Segundos)", min_value=0.1)
     
     if st.button("Analisar Eficiência", type="primary"):
@@ -200,7 +201,7 @@ with aba_retorno_n2:
 # ABA 5: AUDITORIA
 # ==========================================
 with aba_auditoria:
-    st.markdown("### ⚖️ Auditoria de Atendimentos N2 (Validação 16/07/2026)")
+    st.markdown("### ⚖️ Auditoria de Atendimentos N2")
     parecer_auditoria = st.text_area("Histórico do Parecer/Atendimento:", height=300)
     fotos_auditoria = st.file_uploader("Evidências (Prints e-mail/Jira):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_auditoria")
     
@@ -256,7 +257,7 @@ with aba_auditoria:
 # ABA 6: FINALIZAÇÃO N2 (MÓDULO DE FECHAMENTO)
 # ==========================================
 with aba_finalizacao:
-    st.markdown("### ✅ Finalização Profissional de Chamado (Nível 2)")
+    st.markdown("### ✅ Finalização Profissional de Chamado")
     st.markdown("Preencha os campos abaixo para gerar um parecer técnico interno de encerramento padronizado para o CRM.")
     
     col_a, col_b = st.columns(2)
@@ -300,3 +301,56 @@ with aba_finalizacao:
                 st.success("✅ Parecer interno gerado com sucesso!")
                 st.code(resposta.text, language="markdown")
                 st.download_button("💾 Baixar Parecer Técnico (TXT)", resposta.text, "parecer_interno_n2.txt", use_container_width=True)
+
+# ==========================================
+# ABA 7: MIGRAÇÃO CLOUD (NOVO MÓDULO CIRÚRGICO)
+# ==========================================
+with aba_migracao:
+    st.markdown("### ☁️ Dimensionamento de Servidor em Nuvem")
+    st.markdown("Insira os dados da infraestrutura atual para gerar uma recomendação cirúrgica e técnica da nova máquina.")
+    
+    col_cloud1, col_cloud2 = st.columns(2)
+    with col_cloud1:
+        cloud_usuarios = st.number_input("Quantidade de Usuários Ativos (Acessos simultâneos)", min_value=1, step=1, max_value=99)
+        cloud_ram_atual = st.number_input("Memória RAM Atual do Servidor Físico (GB)", min_value=4, step=2)
+    with col_cloud2:
+        cloud_banco_tamanho = st.number_input("Tamanho Estimado do Banco de Dados / Arquivos (GB)", min_value=1, step=10)
+        cloud_cpu_atual = st.number_input("Cores do Processador Atual", min_value=2, step=2)
+        
+    st.divider()
+    fotos_hardware = st.file_uploader("Opcional: Enviar prints das propriedades do servidor atual", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_hardware")
+    
+    if st.button("Gerar Recomendação Cirúrgica", type="primary", use_container_width=True):
+        with st.spinner("Calculando máquina ideal..."):
+            prompt_cloud = f"""
+            Você é um Arquiteto de Soluções Cloud especializado em ERPs. 
+            Sua tarefa é calcular internamente a configuração ideal de servidor baseada nas regras da empresa e entregar APENAS o resultado final. Seja cirúrgico e direto.
+            
+            Dados atuais do cliente:
+            - Usuários Ativos: {cloud_usuarios}
+            - Tamanho dos Arquivos/Banco: {cloud_banco_tamanho} GB
+            
+            CÁLCULO INTERNO OBRIGATÓRIO (NÃO EXPLIQUE A MATEMÁTICA NO TEXTO):
+            - RAM (TS): Mínimo de 8GB (Base OS) + 1GB por usuário ativo.
+            - SSD NVMe: Tamanho atual do banco + 50% de folga. Mínimo absoluto exigido na cloud é de 60 GB.
+            - CPU: Mínimo 4 vCores. (Aumente para 8 vCores se houver mais de 15 usuários, e 16 vCores para mais de 30 usuários).
+            
+            REGRAS RÍGIDAS DE RETORNO:
+            1. Entregue APENAS uma lista limpa com o título "☁️ Configuração de Servidor Recomendada".
+            2. Mostre estritamente os 4 atributos finais: vCPU, Memória RAM, SSD NVMe e Usuários Suportados.
+            3. É ESTRITAMENTE PROIBIDO explicar como você chegou no cálculo matemático.
+            4. É ESTRITAMENTE PROIBIDO listar benefícios da migração ou dar dicas genéricas e comerciais.
+            5. Apenas entregue as especificações técnicas da máquina que deve ser contratada no provedor.
+            """
+            
+            conteudo_cloud = [prompt_cloud]
+            if fotos_hardware:
+                for f in fotos_hardware: conteudo_cloud.append(Image.open(f))
+            
+            try:
+                resposta = model.generate_content(conteudo_cloud)
+                st.success("✅ Recomendação gerada com sucesso!")
+                st.code(resposta.text, language="markdown")
+                st.download_button("💾 Baixar Proposta Cloud (TXT)", resposta.text, "proposta_cloud.txt", use_container_width=True)
+            except Exception as e:
+                st.error(f"Erro na geração: {e}")
