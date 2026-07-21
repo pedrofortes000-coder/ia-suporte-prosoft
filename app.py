@@ -4,7 +4,7 @@ from PIL import Image
 import os 
 
 # --- CONFIGURAÇÃO E SEGURANÇA ---
-st.set_page_config(page_title="Portal IA: Suporte e QA", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="Portal IA: Prosoft", page_icon="🤖", layout="wide")
 
 try:
     chave_limpa = st.secrets["GEMINI_API_KEY"].strip()
@@ -14,7 +14,7 @@ except Exception as e:
     st.error("Erro ao configurar a API. Verifique o seu st.secrets no painel do Streamlit.")
     st.stop()
 
-st.title("🤖 Portal IA: Diagnóstico, QA, Retornos e Cloud")
+st.title("🤖 Portal IA: Diagnóstico, Relacionamento, Auditoria e Fechamento")
 
 # --- CORREÇÃO VISUAL AGRESSIVA: QUEBRA DE LINHA NO BLOCO DE CÓDIGO ---
 st.markdown("""
@@ -30,15 +30,14 @@ pre, code {
 </style>
 """, unsafe_allow_html=True)
 
-# --- CRIAÇÃO DAS 7 ABAS ---
-aba_suporte, aba_relacionamento, aba_performance, aba_retorno_n2, aba_auditoria, aba_finalizacao, aba_migracao = st.tabs([
+# --- CRIAÇÃO DAS 6 ABAS ---
+aba_suporte, aba_relacionamento, aba_performance, aba_retorno_n2, aba_auditoria, aba_finalizacao = st.tabs([
     "🛠️ Suporte (N1)", 
     "🤝 Relacionamento (N2)", 
     "📊 Performance", 
     "🔄 Retorno N2",
     "⚖️ Auditoria",
-    "✅ Finalização N2",
-    "☁️ Migração Cloud"
+    "✅ Finalização N2"
 ])
 
 # --- BASE DE CONHECIMENTO (CORE) ---
@@ -46,9 +45,9 @@ base_padrao = """
 [REGRAS FIXAS DE INFRAESTRUTURA]
 1. Lentidão Generalizada: Servidor mínimo de 12GB e processador de 2GHz x64. Rede mínimo 10Mb/s (recomendado 1Gb/s).
 2. Lentidão Isolada: Estação local com 4GB de RAM, Win PRO/ENTERPRISE, .NET 4.8 e Java 8.
-3. Comunicação Externa: "Serviço de Integração" atualizado, internet min 4Mb/s, portas 80/8080 liberadas.
+3. Comunicação Externa: "Prosoft Serviço de Integração" atualizado, internet min 4Mb/s, portas 80/8080 liberadas.
 4. Esgotamento de Memória: Para TS (Terminal Service), 8GB RAM base + 1GB por usuário. Reiniciar servidor libera memória presa.
-5. Limites de Banco: Workgroup 11 (max 10 usuários). Workgroup 13/15 (max 35 usuários). Server (max 500 usuários).
+5. Limite Pervasive: Workgroup 11 (max 10 usuários). Workgroup 13/15 (max 35 usuários). Server (max 500 usuários).
 6. Antivírus: Leitura constante de pastas causa lentidão severa. Exigir exceções.
 7. Reinf/eSocial: Liberar porta 5984 (CouchDB) e 1433/1434 (SQL Server).
 8. Rede e VPN: Uso de Wi-Fi ou VPN causa degradação; mapear estação por IP reduz lentidão.
@@ -72,7 +71,7 @@ with aba_suporte:
     st.markdown("### ⏱️ Sintomas")
     col3, col4 = st.columns(2)
     with col3:
-        rotinas_comuns = st.multiselect("Rotinas Afetadas", ["Abertura inicial", "Inclusão e Gravação de Cadastros", "Folha de Pagamento", "Comunicação Externa (Portal, eSocial, Reinf)", "Processamento/Relatórios"])
+        rotinas_comuns = st.multiselect("Rotinas Afetadas", ["Abertura inicial do Prosoft", "Inclusão e Gravação de Cadastros", "Folha de Pagamento", "Comunicação Externa (Portal, eSocial, Reinf)", "Processamento/Relatórios"])
         rotinas_extras = st.text_input("Outras Rotinas (separar por vírgula)")
     with col4:
         tempo_resposta = st.number_input("Tempo de Resposta (Segundos)", min_value=0.0, step=0.5, format="%.1f")
@@ -88,7 +87,7 @@ with aba_suporte:
                     base_extra = "\n[REGRAS DINÂMICAS]\n" + f.read()
             
             prompt = f"""
-            Você é especialista de suporte técnico. Base: {base_padrao + base_extra}. 
+            Você é especialista Prosoft. Base: {base_padrao + base_extra}. 
             Analise o cenário: {escopo}, {conexao}, {banco}. Sintomas: {rotinas_comuns} {rotinas_extras}.
             
             REGRAS RÍGIDAS DE RETORNO:
@@ -119,7 +118,7 @@ with aba_relacionamento:
         if texto_transcricao or fotos_relacionamento:
             with st.spinner("Analisando transcrição e lendo imagens do chat..."):
                 prompt_relac = f"""
-                Você é um analista técnico escrivão. Analise a transcrição e/ou as imagens anexadas e crie um dossiê técnico.
+                Você é um analista técnico escrivão. Analise a transcrição e/ou as imagens anexadas e crie um dossiê técnico para o Nível 2.
 
                 NOVA INSTRUÇÃO DE LEITURA DE IMAGENS (OCR CONTEXTUAL):
                 Se imagens foram enviadas (como prints de chat da reunião ou telas do sistema), você DEVE extrair as frases, comentários e erros presentes nelas.
@@ -152,13 +151,13 @@ with aba_relacionamento:
 with aba_performance:
     st.markdown("### 📊 Calculadora de Performance")
     c1, c2 = st.columns(2)
-    qtd = c1.number_input("Quantidade de Notas/Registros", min_value=1)
+    qtd = c1.number_input("Quantidade de Notas", min_value=1)
     tempo = c2.number_input("Tempo Total (Segundos)", min_value=0.1)
     
     if st.button("Analisar Eficiência", type="primary"):
         with st.spinner("Analisando eficiência..."):
             prompt_perf = f"""
-            Analise a performance: {qtd} registros em {tempo} segundos. Lembre-se: abaixo de 1 registro/s indica gargalo.
+            Analise a performance: {qtd} notas em {tempo} segundos. Lembre-se: abaixo de 1 nota/s indica gargalo.
             
             REGRA: Responda APENAS com a análise matemática e técnica de banco de dados. Sem saudações e sem feedback comportamental.
             """
@@ -201,7 +200,7 @@ with aba_retorno_n2:
 # ABA 5: AUDITORIA
 # ==========================================
 with aba_auditoria:
-    st.markdown("### ⚖️ Auditoria de Atendimentos N2")
+    st.markdown("### ⚖️ Auditoria de Atendimentos N2 (Validação 16/07/2026)")
     parecer_auditoria = st.text_area("Histórico do Parecer/Atendimento:", height=300)
     fotos_auditoria = st.file_uploader("Evidências (Prints e-mail/Jira):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_auditoria")
     
@@ -211,12 +210,12 @@ with aba_auditoria:
         else:
             with st.spinner("Auditorando atendimentos..."):
                 prompt_auditor = f"""
-                Você é um Auditor de Qualidade Sênior. Sua missão é auditar o atendimento de Nível 2 abaixo.
+                Você é um Auditor de Qualidade Sênior da Prosoft. Sua missão é auditar o atendimento de Nível 2 abaixo.
                 
                 --- REGRAS DE BOM SENSO ---
                 1. Análise de Finalização: Se o chamado foi encerrado pelo analista e consta no parecer que a solução foi aplicada, ou que o cliente ficou responsável por monitorar/reiniciar, o analista NÃO deve ser penalizado por "Contato" ou "Contato p/ finalizar". O atendimento é considerado "Finalizado Corretamente".
                 2. O que não está no parecer não conta: A avaliação é feita EXCLUSIVAMENTE pelo que está registrado no texto e nas imagens anexadas.
-                3. É ESTRITAMENTE PROIBIDO gerar seções de "Feedback pessoal", "Pontos Fortes", "Melhorias de comunicação" ou avaliar a postura de qualquer pessoa. Atenha-se puramente aos critérios técnicos.
+                3. É ESTRITAMENTE PROIBIDO gerar seções de "Feedback pessoal", "Pontos Fortes", "Melhorias de comunicação" ou avaliar a postura de qualquer pessoa. Atenha-se puramente aos critérios abaixo.
                 
                 --- CRITÉRIOS DE AUDITORIA ---
                 1. Contato (Grave): Ignorar se o chamado foi finalizado corretamente.
@@ -224,7 +223,7 @@ with aba_auditoria:
                 3. Vínculo MAN/PDP (Leve): Deve constar código (MAN, PDP, ANR, etc) e link do Jira.
                 4. Divulgação da MAN/PDP (Grave): E-mail com supervisão em cópia e assunto "Criado projeto no Jira: [CODIGO] - [ASSUNTO]".
                 5. Notificação ao cliente (Grave): Informar cliente sobre análise do Dev.
-                6. Justificativa de CR/Artigo (Leve): Referenciar base (ID/Link).
+                6. Justificativa de CR/Artigo (Leve): Referenciar base (ID/Link). Artigo A124 para procedimentos internos.
                 7. Contato agendado (Grave): Cumprir data.
                 8. Contato p/ finalizar (Grave): Ignorar se o cliente aceitou monitorar ou reiniciar o sistema.
                 9. Erros gramaticais (Leve): Comprometimento da compreensão.
@@ -257,7 +256,7 @@ with aba_auditoria:
 # ABA 6: FINALIZAÇÃO N2 (MÓDULO DE FECHAMENTO)
 # ==========================================
 with aba_finalizacao:
-    st.markdown("### ✅ Finalização Profissional de Chamado")
+    st.markdown("### ✅ Finalização Profissional de Chamado (Nível 2)")
     st.markdown("Preencha os campos abaixo para gerar um parecer técnico interno de encerramento padronizado para o CRM.")
     
     col_a, col_b = st.columns(2)
@@ -273,7 +272,7 @@ with aba_finalizacao:
         else:
             with st.spinner("Estruturando parecer técnico..."):
                 prompt_finalizacao = f"""
-                Você é um Analista de Suporte Sênior. Sua tarefa é criar um PARECER TÉCNICO INTERNO de encerramento para ser salvo no sistema de chamados (CRM/Jira).
+                Você é um Analista de Suporte Sênior. Sua tarefa é criar um PARECER TÉCNICO INTERNO de encerramento para ser salvo no sistema de chamados (CRM/Jira) da Prosoft.
                 
                 REGRAS RÍGIDAS DE FORMATAÇÃO:
                 - NÃO escreva como um e-mail para o cliente. Não use "Prezado", "Atenciosamente" ou saudações.
@@ -301,66 +300,3 @@ with aba_finalizacao:
                 st.success("✅ Parecer interno gerado com sucesso!")
                 st.code(resposta.text, language="markdown")
                 st.download_button("💾 Baixar Parecer Técnico (TXT)", resposta.text, "parecer_interno_n2.txt", use_container_width=True)
-
-# ==========================================
-# ABA 7: MIGRAÇÃO CLOUD (NOVO MÓDULO)
-# ==========================================
-with aba_migracao:
-    st.markdown("### ☁️ Dimensionamento de Servidor em Nuvem")
-    st.markdown("Insira os dados da infraestrutura atual do cliente para gerar uma recomendação de migração Cloud baseada nas métricas do provedor.")
-    
-    col_cloud1, col_cloud2 = st.columns(2)
-    with col_cloud1:
-        cloud_usuarios = st.number_input("Quantidade de Usuários Ativos (Acessos simultâneos)", min_value=1, step=1, max_value=99)
-        cloud_ram_atual = st.number_input("Memória RAM Atual do Servidor Físico (GB)", min_value=4, step=2)
-    with col_cloud2:
-        cloud_banco_tamanho = st.number_input("Tamanho Estimado do Banco de Dados / Arquivos (GB)", min_value=1, step=10)
-        cloud_cpu_atual = st.number_input("Cores do Processador Atual", min_value=2, step=2)
-        
-    st.divider()
-    fotos_hardware = st.file_uploader("Opcional: Enviar prints das propriedades do servidor atual", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_hardware")
-    
-    if st.button("Gerar Recomendação de Arquitetura Cloud", type="primary", use_container_width=True):
-        with st.spinner("Calculando o dimensionamento ideal da nuvem..."):
-            prompt_cloud = f"""
-            Você atua como um Arquiteto de Soluções Cloud especializado em ERPs. 
-            Sua tarefa é ler os dados do cliente e recomendar a configuração ideal para a migração para a nuvem.
-            
-            Dados atuais do cliente:
-            - Usuários Ativos: {cloud_usuarios}
-            - RAM Física Atual: {cloud_ram_atual} GB
-            - Tamanho dos Arquivos/Banco: {cloud_banco_tamanho} GB
-            - CPU Física Atual: {cloud_cpu_atual} Cores
-            
-            PARÂMETROS OBRIGATÓRIOS DO PROVEDOR CLOUD (Respeite estes limites exatos):
-            - Processamento: Escolha entre 2 a 48 Cores (vCPU Dedicados).
-            - Memória RAM: Escolha entre 2 a 512 GB (Memória ECC DDR5).
-            - SSD NVMe (Armazenamento): Escolha entre 60 GB a 2 TB (Alta velocidade).
-            - Usuários suportados na plataforma: 1 a 99 usuários.
-            
-            REGRA DE CÁLCULO DE RECURSOS (BASEADA NAS REGRAS DO SISTEMA):
-            - Memória RAM para Terminal Service (TS): Exige-se um mínimo de 8GB de base para o Sistema Operacional + 1GB adicional para cada usuário.
-            - Armazenamento: O SSD NVMe recomendado deve ter espaço suficiente para o tamanho atual do banco de dados + 30% a 50% de folga para crescimento do log transacional e backups locais temporários. O mínimo exigido pelo provedor é 60 GB.
-            - CPU: Calcule a vCPU com base no número de usuários e no tamanho do banco, garantindo que não haja gargalos (min 4 Cores recomendados para aplicações corporativas, ou mais, a depender dos usuários).
-
-            Gere um laudo técnico contendo:
-            1. Configuração Recomendada (vCPU, RAM, SSD NVMe e Usuários) de forma clara.
-            2. Justificativa do Cálculo (explique matematicamente por que escolheu essa RAM e SSD baseando-se na regra do sistema).
-            3. Benefícios da Migração frente ao hardware físico atual relatado.
-            
-            REGRAS RÍGIDAS DE FORMATAÇÃO:
-            - É ESTRITAMENTE PROIBIDO gerar feedbacks comportamentais, pontos fortes ou fracos.
-            - Seja direto, técnico e utilize listas para facilitar a leitura rápida da recomendação.
-            """
-            
-            conteudo_cloud = [prompt_cloud]
-            if fotos_hardware:
-                for f in fotos_hardware: conteudo_cloud.append(Image.open(f))
-            
-            try:
-                resposta = model.generate_content(conteudo_cloud)
-                st.success("✅ Recomendação Cloud gerada com sucesso!")
-                st.code(resposta.text, language="markdown")
-                st.download_button("💾 Baixar Proposta Cloud (TXT)", resposta.text, "proposta_cloud.txt", use_container_width=True)
-            except Exception as e:
-                st.error(f"Erro na geração: {e}")
