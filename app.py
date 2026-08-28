@@ -16,10 +16,9 @@ except Exception as e:
 
 st.title("🤖 Portal IA: Diagnóstico, QA, Retornos e Cloud")
 
-# --- CORREÇÃO VISUAL AGRESSIVA: QUEBRA DE LINHA NO BLOCO DE CÓDIGO ---
+# --- CORREÇÃO VISUAL AGRESSIVA ---
 st.markdown("""
 <style>
-/* Força a quebra de linha em qualquer bloco de código ou texto pré-formatado */
 div[data-testid="stCodeBlock"] pre, 
 div[data-testid="stCodeBlock"] code,
 pre, code {
@@ -29,6 +28,20 @@ pre, code {
 }
 </style>
 """, unsafe_allow_html=True)
+
+# --- FUNÇÃO UNIVERSAL DE LEITURA (IMAGEM E ÁUDIO) ---
+def processar_arquivos(arquivos_upload):
+    arquivos_prontos = []
+    if arquivos_upload:
+        for f in arquivos_upload:
+            if f.type.startswith('image/'):
+                arquivos_prontos.append(Image.open(f))
+            elif f.type.startswith('audio/'):
+                arquivos_prontos.append({
+                    "mime_type": f.type,
+                    "data": f.read()
+                })
+    return arquivos_prontos
 
 # --- CRIAÇÃO DAS 7 ABAS ---
 aba_suporte, aba_relacionamento, aba_performance, aba_retorno_n2, aba_auditoria, aba_finalizacao, aba_migracao = st.tabs([
@@ -78,7 +91,7 @@ with aba_suporte:
         tempo_resposta = st.number_input("Tempo de Resposta (Segundos)", min_value=0.0, step=0.5, format="%.1f")
     
     st.divider()
-    fotos_upload = st.file_uploader("Upload de Prints (Configurações/Erro)", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_n1")
+    fotos_upload = st.file_uploader("Upload de Prints ou Áudios", type=["png", "jpg", "jpeg", "wav", "mp3", "m4a", "ogg"], accept_multiple_files=True, key="fotos_n1")
     
     if st.button("Analisar Chamado Nível 1", type="primary", use_container_width=True):
         with st.spinner("Analisando..."):
@@ -96,9 +109,8 @@ with aba_suporte:
             2. É ESTRITAMENTE PROIBIDO avaliar o comportamento das pessoas, gerar "feedbacks", "pontos fortes" ou qualquer tipo de avaliação de desempenho pessoal ou profissional.
             3. Mantenha a resposta impessoal e direta ao ponto.
             """
-            conteudo = [prompt]
-            if fotos_upload:
-                for f in fotos_upload: conteudo.append(Image.open(f))
+            conteudo = [prompt] + processar_arquivos(fotos_upload)
+            
             try:
                 resposta = model.generate_content(conteudo)
                 st.success("✅ Diagnóstico concluído!")
@@ -111,22 +123,23 @@ with aba_suporte:
 # ABA 2: RELACIONAMENTO (N2 - Dossiê)
 # ==========================================
 with aba_relacionamento:
-    st.markdown("### 🗣️ Análise de Transcrição (Meet)")
-    texto_transcricao = st.text_area("Cole a transcrição aqui (opcional se enviar prints):", height=300)
-    fotos_relacionamento = st.file_uploader("Upload de prints da reunião (Chat/Comentários/Tela):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_relac")
+    st.markdown("### 🗣️ Análise de Transcrição e Áudio")
+    texto_transcricao = st.text_area("Cole a transcrição em texto aqui (opcional se enviar áudios/prints):", height=300)
+    arquivos_relacionamento = st.file_uploader("Upload de Áudios da ligação ou Prints do chat:", type=["png", "jpg", "jpeg", "wav", "mp3", "m4a", "ogg"], accept_multiple_files=True, key="fotos_relac")
     
     if st.button("Gerar Dossiê para Nível 2", type="primary", use_container_width=True):
-        if texto_transcricao or fotos_relacionamento:
-            with st.spinner("Analisando transcrição e lendo imagens do chat..."):
+        if texto_transcricao or arquivos_relacionamento:
+            with st.spinner("Analisando textos, ouvindo áudios e lendo imagens..."):
                 prompt_relac = f"""
-                Você é um analista técnico escrivão. Analise a transcrição e/ou as imagens anexadas e crie um dossiê técnico para o Nível 2.
+                Você é um analista técnico escrivão. Analise a transcrição, os áudios e/ou as imagens anexadas e crie um dossiê técnico para o Nível 2.
 
-                NOVA INSTRUÇÃO DE LEITURA DE IMAGENS (OCR CONTEXTUAL):
-                Se imagens foram enviadas (como prints de chat da reunião ou telas do sistema), você DEVE extrair as frases, comentários e erros presentes nelas.
-                Cruze os comentários extraídos das imagens com o texto da transcrição. Insira as frases lidas das imagens no exato contexto onde elas se encaixam no dossiê.
+                NOVA INSTRUÇÃO DE LEITURA MULTIMODAL:
+                Se áudios foram enviados, transcreva os pontos principais e técnicos da ligação.
+                Se imagens foram enviadas, extraia as frases, comentários e erros presentes nelas.
+                Cruze os dados extraídos das imagens e dos áudios com o texto da transcrição (se houver). Insira as falas no exato contexto onde elas se encaixam no dossiê.
 
                 REGRAS DE FORMATAÇÃO ESTRITAS E INEGOCIÁVEIS:
-                1. Retorne APENAS o resumo técnico, o ambiente relatado, o problema central, as falas extraídas do chat/imagens e a ação tomada.
+                1. Retorne APENAS o resumo técnico, o ambiente relatado, o problema central, as falas extraídas e a ação tomada.
                 2. É ESTRITAMENTE PROIBIDO gerar seções de "Feedback", "Pontos Fortes", "Oportunidades de Melhoria".
                 3. É ESTRITAMENTE PROIBIDO avaliar o comportamento ou proatividade das pessoas.
                 4. Mantenha o tom frio, técnico e focado apenas na documentação do chamado.
@@ -135,16 +148,14 @@ with aba_relacionamento:
                 {texto_transcricao}
                 """
                 
-                conteudo_relac = [prompt_relac]
-                if fotos_relacionamento:
-                    for f in fotos_relacionamento: conteudo_relac.append(Image.open(f))
+                conteudo_relac = [prompt_relac] + processar_arquivos(arquivos_relacionamento)
                 
                 resposta = model.generate_content(conteudo_relac)
-                st.success("✅ Dossiê gerado com extração de imagens!")
+                st.success("✅ Dossiê gerado com sucesso!")
                 st.code(resposta.text, language="markdown")
                 st.download_button("💾 Baixar Dossiê (TXT)", resposta.text, "dossie_n2.txt", use_container_width=True)
         else:
-            st.warning("⚠️ Insira a transcrição em texto ou anexe pelo menos uma imagem do chat para gerar o dossiê.")
+            st.warning("⚠️ Insira a transcrição em texto ou anexe pelo menos um arquivo de áudio/imagem para gerar o dossiê.")
 
 # ==========================================
 # ABA 3: PERFORMANCE
@@ -178,7 +189,7 @@ with aba_retorno_n2:
     with c_2:
         transcricao_feedback = st.text_area("Feedback do Cliente:", height=200)
     
-    fotos_retorno = st.file_uploader("Evidências visuais (Prints/Logs):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_n2")
+    arquivos_retorno = st.file_uploader("Evidências (Prints, Logs ou Áudios):", type=["png", "jpg", "jpeg", "wav", "mp3", "m4a", "ogg"], accept_multiple_files=True, key="fotos_n2")
     
     if st.button("Gerar Relatório de Retorno", type="primary", use_container_width=True):
         with st.spinner("Consolidando..."):
@@ -188,9 +199,7 @@ with aba_retorno_n2:
             REGRAS RÍGIDAS: 
             É ESTRITAMENTE PROIBIDO avaliar o comportamento, gerar seções de feedback pessoal ou dar notas para a atuação do analista ou do cliente. Mantenha o tom estritamente documental.
             """
-            conteudo_final = [prompt_fechamento]
-            if fotos_retorno:
-                for f in fotos_retorno: conteudo_final.append(Image.open(f))
+            conteudo_final = [prompt_fechamento] + processar_arquivos(arquivos_retorno)
             
             resposta = model.generate_content(conteudo_final)
             st.success("✅ Relatório gerado!")
@@ -203,7 +212,7 @@ with aba_retorno_n2:
 with aba_auditoria:
     st.markdown("### ⚖️ Auditoria de Atendimentos N2")
     parecer_auditoria = st.text_area("Histórico do Parecer/Atendimento:", height=300)
-    fotos_auditoria = st.file_uploader("Evidências (Prints e-mail/Jira):", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_auditoria")
+    arquivos_auditoria = st.file_uploader("Evidências (Prints, e-mail, Jira ou Áudios da ligação):", type=["png", "jpg", "jpeg", "wav", "mp3", "m4a", "ogg"], accept_multiple_files=True, key="fotos_auditoria")
     
     if st.button("Executar Auditoria Rigorosa", type="primary", use_container_width=True):
         if not parecer_auditoria:
@@ -215,8 +224,8 @@ with aba_auditoria:
                 
                 --- REGRAS DE BOM SENSO ---
                 1. Análise de Finalização: Se o chamado foi encerrado pelo analista e consta no parecer que a solução foi aplicada, ou que o cliente ficou responsável por monitorar/reiniciar, o analista NÃO deve ser penalizado por "Contato" ou "Contato p/ finalizar". O atendimento é considerado "Finalizado Corretamente".
-                2. O que não está no parecer não conta: A avaliação é feita EXCLUSIVAMENTE pelo que está registrado no texto e nas imagens anexadas.
-                3. É ESTRITAMENTE PROIBIDO gerar seções de "Feedback pessoal", "Pontos Fortes", "Melhorias de comunicação" ou avaliar a postura de qualquer pessoa. Atenha-se puramente aos critérios abaixo.
+                2. O que não está no parecer não conta: A avaliação é feita EXCLUSIVAMENTE pelo que está registrado no texto e nos arquivos (áudios/imagens) anexados.
+                3. É ESTRITAMENTE PROIBIDO gerar seções de "Feedback pessoal", "Pontos Fortes", "Melhorias de comunicação" ou avaliar a postura de qualquer pessoa. Atenha-se puramente aos critérios técnicos abaixo.
                 
                 --- CRITÉRIOS DE AUDITORIA ---
                 1. Contato (Grave): Ignorar se o chamado foi finalizado corretamente.
@@ -233,7 +242,7 @@ with aba_auditoria:
                 12. Controle diretório (Leve): Caminho/Link da base salva.
                 13. Tipo 1882 (Leve): Respostas coerentes ao script obrigatório.
 
-                Analise o parecer e as imagens e gere:
+                Analise o parecer e os arquivos e gere:
                 - Tabela: [Regra] | [Status: Passou/Falhou/Isento] | [Severidade] | [Justificativa]
                 - Veredito Final: [ATENDIMENTO VÁLIDO] ou [ATENDIMENTO PENALIZADO].
                 
@@ -241,9 +250,7 @@ with aba_auditoria:
                 {parecer_auditoria}
                 """
                 
-                conteudo = [prompt_auditor]
-                if fotos_auditoria:
-                    for f in fotos_auditoria: conteudo.append(Image.open(f))
+                conteudo = [prompt_auditor] + processar_arquivos(arquivos_auditoria)
                 
                 try:
                     resposta = model.generate_content(conteudo)
@@ -273,7 +280,7 @@ with aba_finalizacao:
         else:
             with st.spinner("Estruturando parecer técnico..."):
                 prompt_finalizacao = f"""
-                Você é um Analista de Suporte Sênior. Sua tarefa é criar um PARECER TÉCNICO INTERNO de encerramento para ser salvo no sistema de chamados (CRM/Jira) da Prosoft.
+                Você é um Analista de Suporte Sênior. Sua tarefa é criar um PARECER TÉCNICO INTERNO de encerramento para ser salvo no sistema de chamados (CRM/Jira).
                 
                 REGRAS RÍGIDAS DE FORMATAÇÃO:
                 - NÃO escreva como um e-mail para o cliente. Não use "Prezado", "Atenciosamente" ou saudações.
@@ -318,7 +325,7 @@ with aba_migracao:
         cloud_cpu_atual = st.number_input("Cores do Processador Atual", min_value=2, step=2)
         
     st.divider()
-    fotos_hardware = st.file_uploader("Opcional: Enviar prints das propriedades do servidor atual", type=["png", "jpg", "jpeg"], accept_multiple_files=True, key="fotos_hardware")
+    arquivos_hardware = st.file_uploader("Opcional: Enviar prints das propriedades do servidor atual", type=["png", "jpg", "jpeg", "wav", "mp3", "m4a", "ogg"], accept_multiple_files=True, key="fotos_hardware")
     
     if st.button("Gerar Recomendação Cirúrgica", type="primary", use_container_width=True):
         with st.spinner("Calculando máquina ideal..."):
@@ -343,9 +350,7 @@ with aba_migracao:
             5. Apenas entregue as especificações técnicas da máquina que deve ser contratada no provedor.
             """
             
-            conteudo_cloud = [prompt_cloud]
-            if fotos_hardware:
-                for f in fotos_hardware: conteudo_cloud.append(Image.open(f))
+            conteudo_cloud = [prompt_cloud] + processar_arquivos(arquivos_hardware)
             
             try:
                 resposta = model.generate_content(conteudo_cloud)
