@@ -274,6 +274,9 @@ with aba_finalizacao:
     
     resolucao = st.text_area("Descrição Técnica da Resolução:", height=200, placeholder="Descreva tecnicamente o que foi executado...")
     
+    st.divider()
+    arquivos_finalizacao = st.file_uploader("Evidências (Opcional - Prints, Logs ou Áudios da tratativa):", type=["png", "jpg", "jpeg", "wav", "mp3", "m4a", "ogg"], accept_multiple_files=True, key="fotos_finalizacao")
+    
     if st.button("Gerar Parecer Técnico Interno", type="primary", use_container_width=True):
         if not nome_cliente or not resolucao:
             st.warning("⚠️ Preencha Nome do Cliente e Resolução.")
@@ -292,6 +295,8 @@ with aba_finalizacao:
                 - Telefone: {telefone_contato}
                 - Procedimento Técnico Realizado: {resolucao}
                 
+                Se houver imagens ou áudios em anexo, extraia informações adicionais relevantes (erros citados, falas importantes) para enriquecer o laudo.
+                
                 Estruture o parecer EXATAMENTE com os seguintes tópicos:
                 
                 **1. Registro de Contato:**
@@ -304,7 +309,9 @@ with aba_finalizacao:
                 (Confirme que os testes foram validados e que o ticket está sendo finalizado com sucesso).
                 """
                 
-                resposta = model.generate_content(prompt_finalizacao)
+                conteudo_finalizacao = [prompt_finalizacao] + processar_arquivos(arquivos_finalizacao)
+                
+                resposta = model.generate_content(conteudo_finalizacao)
                 st.success("✅ Parecer interno gerado com sucesso!")
                 st.code(resposta.text, language="markdown")
                 st.download_button("💾 Baixar Parecer Técnico (TXT)", resposta.text, "parecer_interno_n2.txt", use_container_width=True)
